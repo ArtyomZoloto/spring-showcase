@@ -43,7 +43,7 @@ public class TaskRestController {
             Locale locale
     ) {
         if (payload.details() == null || payload.details().isBlank()) {
-            var message = messageSource.getMessage("task.details.error.not_set", null, locale);
+            var message = messageSource.getMessage("task.details.error.not_set", new Object[0], locale);
             return ResponseEntity
                     .badRequest()
                     .contentType(MediaType.APPLICATION_JSON)

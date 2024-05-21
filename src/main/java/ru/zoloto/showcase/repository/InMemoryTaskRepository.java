@@ -13,11 +13,6 @@ public class InMemoryTaskRepository implements TaskRepository {
 
     private List<Task> taskList = new LinkedList<>();
 
-    public InMemoryTaskRepository() {
-        taskList.add(new Task(UUID.randomUUID(), "first task", false));
-        taskList.add(new Task(UUID.randomUUID(), "second task", true));
-    }
-
     @Override
     public List<Task> findAll() {
         return taskList;
@@ -33,5 +28,10 @@ public class InMemoryTaskRepository implements TaskRepository {
         return taskList.stream()
                 .filter(task -> task.id().equals(id))
                 .findFirst();
+    }
+
+    @Override
+    public void clear() {
+        this.taskList.clear();
     }
 }
