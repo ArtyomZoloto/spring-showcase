@@ -1,21 +1,22 @@
 package ru.zoloto.showcase;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import ru.zoloto.showcase.repository.TaskRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Sql("/sql/tasks_rest_controller/test_data.sql")
+@Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
 public class TasksRestControllerIT {
@@ -23,29 +24,10 @@ public class TasksRestControllerIT {
     @Autowired
     MockMvc mockMvc;
 
-    @Autowired
-    TaskRepository taskRepository;
-
-    @AfterEach
-    void clean() {
-        taskRepository.clear();
-    }
-
     @Test
     void handleGetAllTasks_ReturnsValidResponseEntity() throws Exception {
         //given
         var requestBuilderGet = MockMvcRequestBuilders.get("/api/tasks");
-
-        var requestBuilderPost = MockMvcRequestBuilders
-                .post("/api/tasks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "details":"first task",
-                            "completed":false
-                        }
-                        """);
-        mockMvc.perform(requestBuilderPost);
 
         //when
         mockMvc.perform(requestBuilderGet)
@@ -54,10 +36,16 @@ public class TasksRestControllerIT {
                         status().isOk(),
                         content().contentType(MediaType.APPLICATION_JSON),
                         content().json("""
-                                [{
-                                "details":"first task",
-                                "completed":false
-                                }]
+                                [
+                                    {
+                                        "details":"first task",
+                                        "completed":false
+                                    },
+                                    {
+                                        "details":"second task",
+                                        "completed":true
+                                    }
+                                ]
                                 """
                         )
                 );
