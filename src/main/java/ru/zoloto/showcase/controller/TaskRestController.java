@@ -3,6 +3,7 @@ package ru.zoloto.showcase.controller;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.zoloto.showcase.entity.ErrorsPresentation;
@@ -36,6 +37,7 @@ public class TaskRestController {
                 .body(taskRepository.findAll());
     }
 
+    @Transactional
     @PostMapping
     public ResponseEntity<?> handleCreateNewTask(
             @RequestBody NewTaskPayload payload,
