@@ -39,14 +39,15 @@ public class TasksRestControllerTest {
     @Test
     void handleGetAllTasks_returnValidResponseEntity() {
         //given
+        var user = new ApplicationUser(UUID.randomUUID(), "user1", "password1");
         var tasks = List.of(
-                new Task(UUID.randomUUID(), "first task", false),
-                new Task(UUID.randomUUID(), "second task", true)
+                new Task(UUID.randomUUID(), "first task", false, user.id()),
+                new Task(UUID.randomUUID(), "second task", true,user.id())
         );
-        Mockito.doReturn(tasks).when(taskRepository).findAll();
+        Mockito.doReturn(tasks).when(taskRepository).findByApplicationUserId(user.id());
 
         //when
-        var responseEntity = controller.handleGetAllTasks();
+        var responseEntity = controller.handleGetAllTasks(user);
 
         //then
         assertNotNull(responseEntity);
@@ -58,10 +59,11 @@ public class TasksRestControllerTest {
     @Test
     void handleCreateNewTask_PayloadIsValid_ReturnValidResponseEntity() {
         //given
+        var user = new ApplicationUser(UUID.randomUUID(), "user1", "password1");
         var details = "third task";
 
         //when
-        var responseEntity = controller.handleCreateNewTask(new NewTaskPayload(details),
+        var responseEntity = controller.handleCreateNewTask(user, new NewTaskPayload(details),
                 UriComponentsBuilder.fromUriString("http://localhost:8080"), Locale.ENGLISH);
 
         //then
@@ -74,6 +76,7 @@ public class TasksRestControllerTest {
             assertFalse(task.completed());
             assertEquals(URI.create("http://localhost:8080/api/tasks/" + task.id()),
                     responseEntity.getHeaders().getLocation());
+            assertEquals(user.id(), task.applicationUserId());
             verify(taskRepository).save(task);
         } else {
             assertInstanceOf(Task.class, responseEntity.getBody());
@@ -84,13 +87,14 @@ public class TasksRestControllerTest {
     @Test
     void handleCreateNewTask_PayloadIsInValid_ReturnValidResponseEntity() {
         //given
+        var user = new ApplicationUser(UUID.randomUUID(), "user1", "password1");
         var details = "   ";
         var locale = Locale.ENGLISH;
         var errorMessage = "details is not set en";
         doReturn(errorMessage).when(messageSource).getMessage("task.details.error.not_set", new Object[0], locale);
 
         //when
-        var responseEntity = controller.handleCreateNewTask(new NewTaskPayload(details),
+        var responseEntity = controller.handleCreateNewTask(user, new NewTaskPayload(details),
                 UriComponentsBuilder.fromUriString("http://localhost:8080"), locale);
 
         //then

@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-@Primary
 public class JdbcOperationsTaskRepository implements TaskRepository, RowMapper<Task> {
 
     private JdbcOperations jdbcOperations;
@@ -30,26 +29,28 @@ public class JdbcOperationsTaskRepository implements TaskRepository, RowMapper<T
     @Override
     public void save(Task task) {
         this.jdbcOperations.update(
-                "insert into task(id,details,completed) values (?,?,?)",
-                new Object[]{task.id(), task.details(), task.completed()});
+                "insert into task(id,details,completed,id_application_user) values (?,?,?,?)",
+                new Object[]{task.id(), task.details(), task.completed(), task.applicationUserId()});
     }
 
     @Override
     public Optional<Task> findById(UUID id) {
         return this.jdbcOperations.query("select * from task where id = ?",
-                new Object[]{id},this)
+                this,new Object[]{id})
                 .stream().findFirst();
     }
 
     @Override
-    public void clear() {
-
+    public List<Task> findByApplicationUserId(UUID id) {
+        return this.jdbcOperations.query("select * from task where id_application_user = ?", this, id);
     }
 
     @Override
     public Task mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new Task(rs.getObject("id", UUID.class),
                 rs.getString("details"),
-                rs.getBoolean("completed"));
+                rs.getBoolean("completed"),
+                rs.getObject("id_application_user", UUID.class)
+        );
     }
 }

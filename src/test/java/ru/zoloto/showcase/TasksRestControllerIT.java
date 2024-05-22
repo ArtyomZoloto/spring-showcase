@@ -6,6 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Sql("/sql/tasks_rest_controller/test_data.sql")
@@ -25,9 +27,11 @@ public class TasksRestControllerIT {
     MockMvc mockMvc;
 
     @Test
+    @WithMockUser
     void handleGetAllTasks_ReturnsValidResponseEntity() throws Exception {
         //given
-        var requestBuilderGet = MockMvcRequestBuilders.get("/api/tasks");
+        var requestBuilderGet = MockMvcRequestBuilders.get("/api/tasks")
+                .with(httpBasic("user1","password1"));
 
         //when
         mockMvc.perform(requestBuilderGet)
@@ -56,6 +60,7 @@ public class TasksRestControllerIT {
         //given
         var post = MockMvcRequestBuilders
                 .post("/api/tasks")
+                .with(httpBasic("user2","password2"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
@@ -82,6 +87,7 @@ public class TasksRestControllerIT {
     void handleCreateNewTask_PayloadIsInvalid_ReturnsValidResponseEntity() throws Exception {
         //given
         var post = MockMvcRequestBuilders.post("/api/tasks")
+                .with(httpBasic("user1","password1"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .locale(new Locale("ru", "Ru"))
                 .content("""

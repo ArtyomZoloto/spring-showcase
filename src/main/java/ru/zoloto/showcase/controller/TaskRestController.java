@@ -3,9 +3,11 @@ package ru.zoloto.showcase.controller;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
+import ru.zoloto.showcase.ApplicationUser;
 import ru.zoloto.showcase.entity.ErrorsPresentation;
 import ru.zoloto.showcase.entity.NewTaskPayload;
 import ru.zoloto.showcase.entity.Task;
@@ -30,16 +32,17 @@ public class TaskRestController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> handleGetAllTasks() {
+    public ResponseEntity<List<Task>> handleGetAllTasks(@AuthenticationPrincipal ApplicationUser user) {
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(taskRepository.findAll());
+                .body(taskRepository.findByApplicationUserId(user.id()));
     }
 
     @Transactional
     @PostMapping
     public ResponseEntity<?> handleCreateNewTask(
+            @AuthenticationPrincipal ApplicationUser user,
             @RequestBody NewTaskPayload payload,
             UriComponentsBuilder uriComponentsBuilder,
             Locale locale
@@ -51,7 +54,7 @@ public class TaskRestController {
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new ErrorsPresentation(List.of(message)));
         } else {
-            Task task = new Task(payload.details());
+            Task task = new Task(payload.details(), user.id());
             taskRepository.save(task);
             return ResponseEntity
                     .created(uriComponentsBuilder
